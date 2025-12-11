@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feliz dia mi amorcito!!</title>
+
+<!-- LOGO EN LA PESTAÑA -->
+<link rel="icon" type="image/png" href="couple.png">
+
+<style>
+    * { margin: 0; padding: 0; }
+    body {
+        background: #ffc6e8;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: pixel, sans-serif;
+        overflow: hidden;
+    }
+
+    h1 {
+        font-size: 32px;
+        color: #ff5e9c;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 0 #ffbcd4;
+    }
+
+    #game {
+        width: 350px;
+        height: 350px;
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        grid-template-rows: repeat(10, 1fr);
+        background: #ff9ccf;
+        padding: 10px;
+        border-radius: 15px;
+        box-shadow: 0 0 15px #ff5ba8;
+    }
+
+    .cell {
+        background: #ffe8f4;
+        border: 1px solid #ffcce5;
+    }
+    .wall { background: #ffb4d8; }
+
+    #player {
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+		background-image:  url("elias.png");
+        transition: 0.15s;
+    }
+
+    #goal {
+        width: 100%;
+        height: 100%;
+        background-image: url("tom.png");
+        background-size: cover;
+
+    }
+	#winImage { 
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100vw; 
+        height: 100vh; 
+        display: none; 
+        justify-content: center; 
+        align-items: center; 
+        background: rgba(0,0,0,0.7); 
+        z-index: 9999; 
+        }
+		
+#winImage img { 
+width: 500px; 
+max-width: 95%; 
+border-radius: 20px; 
+} 
+	
+	
+</style>
+</head>
+<body>
+
+<h1>5 Mesesitos</h1>
+
+<div id="game"></div>
+
+<!-- Música de fondo -->
+<audio id="music" src="https://www.dropbox.com/scl/fi/txs7z3d7wjk3m5z5t9w4o/cute-music.mp3?rlkey=2f2uo3lj5rxu44m6v1movdv0w&dl=1" loop></audio>
+
+<!-- Sonido movimiento -->
+<audio id="s_move" src="https://assets.mixkit.co/sfx/download/mixkit-video-game-retro-click-237.wav"></audio>
+
+<!-- Sonido al ganar -->
+<audio id="s_win" src="https://assets.mixkit.co/sfx/download/mixkit-extra-bonus-in-a-video-game-2045.wav"></audio>
+
+<!-- IMAGEN DEL GANADOR --> 
+<div id="winImage"> 
+<img src="ganador.png" alt="Ganaste"> </div> 
+<script>
+/* LABERINTO: 1 = pasillo, 0 = pared */
+const maze = [
+ [1,0,0,0,0,0,0,0,0,0],
+ [1,1,1,1,1,0,1,1,1,0],
+ [0,1,0,0,1,0,1,0,1,0],
+ [0,1,0,0,1,1,1,0,1,0],
+ [0,1,1,1,0,0,1,1,1,0],
+ [0,0,0,1,1,1,1,0,1,0],
+ [0,1,1,1,0,0,1,0,1,0],
+ [0,1,0,1,1,1,1,1,1,0],
+ [0,1,1,1,0,0,0,0,1,0],
+ [0,0,0,1,1,1,1,1,1,1]
+];
+
+let playerPos = { x:0, y:0 };
+let goalPos = { x:9, y:9 };
+
+const game = document.getElementById("game");
+const s_move = document.getElementById("s_move");
+const s_win = document.getElementById("s_win");
+const music = document.getElementById("music");
+
+/* Reproducir música al tocar la pantalla (requisito móvil) */
+document.addEventListener("click", ()=>{
+    music.play();
+}, { once:true });
+
+function drawGame(){
+    game.innerHTML = "";
+
+    maze.forEach((row, y)=>{
+        row.forEach((cell, x)=>{
+
+            let div = document.createElement("div");
+            div.classList.add("cell");
+            if(cell === 0) div.classList.add("wall");
+
+            if(playerPos.x === x && playerPos.y === y){
+                let p = document.createElement("div");
+                p.id = "player";
+                div.appendChild(p);
+            }
+
+            if(goalPos.x === x && goalPos.y === y){
+                let g = document.createElement("div");
+                g.id = "goal";
+                div.appendChild(g);
+            }
+
+            game.appendChild(div);
+        })
+    })
+}
+drawGame();
+
+/* Movimiento del jugador */
+function move(dx, dy){
+    const nx = playerPos.x + dx;
+    const ny = playerPos.y + dy;
+
+    if(nx < 0 || ny < 0 || nx > 9 || ny > 9) return;
+    if(maze[ny][nx] === 0) return;
+
+    playerPos.x = nx;
+    playerPos.y = ny;
+    s_move.play();
+
+    checkGoal();
+    drawGame();
+}
+
+
+/* Si llegaste al corazón */ 
+function checkGoal(){ 
+if(playerPos.x === goalPos.x && playerPos.y === goalPos.y){ s_win.play(); 
+setTimeout(() => { 
+document.getElementById("winImage").style.display = "flex"; }, 350); 
+} 
+}
+
+
+/* Controles teclado */
+document.addEventListener("keydown", (e)=>{
+    if(e.key === "ArrowUp") move(0,-1);
+    if(e.key === "ArrowDown") move(0,1);
+    if(e.key === "ArrowLeft") move(-1,0);
+    if(e.key === "ArrowRight") move(1,0);
+});
+
+/* Controles móviles (swipe) */
+let sx=0, sy=0;
+document.addEventListener("touchstart", e=>{
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+});
+document.addEventListener("touchend", e=>{
+    let dx = e.changedTouches[0].clientX - sx;
+    let dy = e.changedTouches[0].clientY - sy;
+
+    if(Math.abs(dx) > Math.abs(dy)){
+        if(dx > 30) move(1,0);
+        else if(dx < -30) move(-1,0);
+    } else {
+        if(dy > 30) move(0,1);
+        else if(dy < -30) move(0,-1);
+    }
+});
+</script>
+
+</body>
+</html>
